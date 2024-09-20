@@ -21,8 +21,8 @@ set -eu
 true ${SOC:=rk3568}
 true ${DISABLE_MKIMG:=0}
 
-UBOOT_REPO=https://github.com/friendlyarm/uboot-rockchip
-UBOOT_BRANCH=nanopi5-v2017.09
+UBOOT_REPO=https://github.com/BoardDogWrt/uboot-rockchip.git
+UBOOT_BRANCH=nanopi5-v2017.09-boarddogwrt
 BOARD=nanopi5
 
 TOPPATH=$PWD
@@ -33,6 +33,7 @@ if [ ! -d $OUT ]; then
 fi
 true ${uboot_src:=${OUT}/uboot-${SOC}}
 true ${UBOOT_SRC:=${uboot_src}}
+true ${UBOOT_JOB:=4}
 
 function usage() {
     echo "Usage: $0 <img dir>"
@@ -54,8 +55,7 @@ if [ $# -ne 1 ]; then
 fi
 
 case "$(uname -mpi)" in
-x86_64*)
-    ;;
+x86_64*) ;;
 *)
     echo "Error: u-boot cross compilation only support on a x86_64 host."
     exit 1
@@ -77,61 +77,61 @@ fi
 
 # ----------------------------------------------------------
 # Get target OS
-true ${TARGET_OS:=$(echo ${1,,}|sed 's/\///g')}
+true ${TARGET_OS:=$(echo ${1,,} | sed 's/\///g')}
 
 case ${TARGET_OS} in
-buildroot* | friendlycore-focal-arm64 | openmediavault-* | debian-* | ubuntu-* | friendlywrt* | eflasher )
-    ;;
+buildroot* | friendlycore-focal-arm64 | openmediavault-* | debian-* | ubuntu-* | friendlywrt* | eflasher | boarddogwrt*) ;;
 *)
     echo "Error: Unsupported target OS: ${TARGET_OS}"
     exit 0
+    ;;
 esac
 
-download_img() {
-    local RKPARAM=$(dirname $0)/${1}/parameter.txt
-    if [ -f "${RKPARAM}" ]; then
-        echo ""
-    else
-    ROMFILE=`./tools/get_pkg_filename.sh ${1}`
-        cat << EOF
-Warn: Image not found for ${1}
-----------------
-you may download it from the netdisk (dl.friendlyarm.com) to get a higher downloading speed,
-the image files are stored in a directory called "03_Partition image files", for example:
-    tar xvzf /path/to/NetDrive/03_Partition\ image\ files/${ROMFILE}
-----------------
-Do you want to download it now via http? (Y/N):
-EOF
-        while read -r -n 1 -t 3600 -s USER_REPLY; do
-            if [[ ${USER_REPLY} = [Nn] ]]; then
-                echo ${USER_REPLY}
-                exit 1
-            elif [[ ${USER_REPLY} = [Yy] ]]; then
-                echo ${USER_REPLY}
-                break;
-            fi
-        done
-
-        if [ -z ${USER_REPLY} ]; then
-            echo "Cancelled."
-            exit 1
-        fi
-        ./tools/get_rom.sh "${1}" || exit 1
-    fi
-}
+# download_img() {
+#     local RKPARAM=$(dirname $0)/${1}/parameter.txt
+#     echo
+#     if [ -f "${RKPARAM}" ]; then
+#         echo ""
+#     else
+#     ROMFILE=`./tools/get_pkg_filename.sh ${1}`
+#         cat << EOF
+# Warn: Image not found for ${1}
+# ----------------
+# you may download it from the netdisk (dl.friendlyarm.com) to get a higher downloading speed,
+# the image files are stored in a directory called "03_Partition image files", for example:
+#     tar xvzf /path/to/NetDrive/03_Partition\ image\ files/${ROMFILE}
+# ----------------
+# Do you want to download it now via http? (Y/N):
+# EOF
+#         while read -r -n 1 -t 3600 -s USER_REPLY; do
+#             if [[ ${USER_REPLY} = [Nn] ]]; then
+#                 echo ${USER_REPLY}
+#                 exit 1
+#             elif [[ ${USER_REPLY} = [Yy] ]]; then
+#                 echo ${USER_REPLY}
+#                 break;
+#             fi
+#         done
+#         if [ -z ${USER_REPLY} ]; then
+#             echo "Cancelled."
+#             exit 1
+#         fi
+#         ./tools/get_rom.sh "${1}" || exit 1
+#     fi
+# }
 
 if [ ! -d ${UBOOT_SRC} ]; then
     git clone ${UBOOT_REPO} --depth 1 -b ${UBOOT_BRANCH} ${UBOOT_SRC}
 fi
 if [ ! -d ${UBOOT_SRC}/../rkbin ]; then
     (cd ${UBOOT_SRC}/../ && {
-        git clone https://github.com/friendlyarm/rkbin -b ${BOARD}
+        git clone https://github.com/BoardDogWrt/rkbin.git -b ${BOARD}
     })
 fi
 
 cd ${UBOOT_SRC}
 make distclean
-./make.sh ${BOARD}
+UBOOT_JOB=$UBOOT_JOBS ./make.sh ${BOARD}
 
 if [ $? -ne 0 ]; then
     echo "failed to build uboot."
@@ -142,15 +142,15 @@ if [ x"$DISABLE_MKIMG" = x"1" ]; then
     exit 0
 fi
 
-echo "building uboot ok."
-cd ${TOPPATH}
-download_img ${TARGET_OS}
-./tools/update_uboot_bin.sh ${UBOOT_SRC} ${TOPPATH}/${TARGET_OS}
-if [ $? -eq 0 ]; then
-    echo "updating ${TARGET_OS}/uboot.img ok."
-else
-    echo "failed."
-    exit 1
-fi
+# echo "building uboot ok."
+# cd ${TOPPATH}
+# download_img ${TARGET_OS}
+# ./tools/update_uboot_bin.sh ${UBOOT_SRC} ${TOPPATH}/${TARGET_OS}
+# if [ $? -eq 0 ]; then
+#     echo "updating ${TARGET_OS}/uboot.img ok."
+# else
+#     echo "failed."
+#     exit 1
+# fi
 
-exit 0
+# exit 0

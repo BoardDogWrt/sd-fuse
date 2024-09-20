@@ -71,7 +71,7 @@ if [ -f ${TARGET_OS}/rootfs.img ]; then
 
     MKFS_OPTS="-E android_sparse -t ext4 -L rootfs -M /root -b 4096"
     case ${TARGET_OS} in
-    friendlywrt* | buildroot*)
+    boarddogwrt* | friendlywrt* | buildroot*)
         # set default uid/gid to 0
         MKFS_OPTS="-0 ${MKFS_OPTS}"
         ;;
@@ -83,8 +83,8 @@ if [ -f ${TARGET_OS}/rootfs.img ]; then
     ROOTFS_DIR=${OUT}/rootfs_new
 
     case ${TARGET_OS} in
-    friendlywrt*)
-        echo "prepare kernel modules for friendlywrt ..."
+    boarddogwrt* | friendlywrt*)
+        echo "prepare kernel modules for boarddogwrt ..."
         ${TOP}/tools/prepare_friendlywrt_kernelmodules.sh ${ROOTFS_DIR}
         ;;
     *)

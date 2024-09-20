@@ -19,12 +19,12 @@ set -eu
 # http://www.gnu.org/licenses/gpl-2.0.html.
 
 function usage() {
-       echo "Usage: $0 <img dir> [img filename] [options]"
-       echo "    examples:"
-       echo "        ./mk-emmc-image.sh debian-buster-desktop-arm64 filename=myimg-emmc.img autostart=yes"
-       echo "        ./mk-emmc-image.sh debian-buster-desktop-arm64 autostart=yes"
-       echo "        ./mk-emmc-image.sh debian-buster-desktop-arm64"
-       exit 0
+    echo "Usage: $0 <img dir> [img filename] [options]"
+    echo "    examples:"
+    echo "        ./mk-emmc-image.sh debian-buster-desktop-arm64 filename=myimg-emmc.img autostart=yes"
+    echo "        ./mk-emmc-image.sh debian-buster-desktop-arm64 autostart=yes"
+    echo "        ./mk-emmc-image.sh debian-buster-desktop-arm64"
+    exit 0
 }
 
 if [ $# -eq 0 ]; then
@@ -38,14 +38,14 @@ check_and_install_package
 # Get platform, target OS
 
 true ${SOC:=rk3568}
-true ${TARGET_OS:=$(echo ${1,,}|sed 's/\///g')}
+true ${TARGET_OS:=$(echo ${1,,} | sed 's/\///g')}
 
 case ${TARGET_OS} in
-buildroot* | friendlycore-focal-arm64 | openmediavault-* | debian-* | ubuntu-* | friendlywrt* | android*)
-        ;;
+buildroot* | friendlycore-focal-arm64 | openmediavault-* | debian-* | ubuntu-* | friendlywrt* | android* | boarddogwrt*) ;;
 *)
-        echo "Error: Unsupported target OS: ${TARGET_OS}"
-        exit 0
+    echo "Error: Unsupported target OS: ${TARGET_OS}"
+    exit 0
+    ;;
 esac
 
 download_img() {
@@ -53,8 +53,9 @@ download_img() {
     if [ -f "${RKPARAM}" ]; then
         echo ""
     else
-	ROMFILE=`./tools/get_pkg_filename.sh ${1}`
-        cat << EOF
+        ROMFILE=$(./tools/get_pkg_filename.sh ${1})
+        
+        cat <<EOF
 Warn: Image not found for ${1}
 ----------------
 you may download it from the netdisk (dl.friendlyarm.com) to get a higher downloading speed,
@@ -69,7 +70,7 @@ EOF
                 exit 1
             elif [[ ${USER_REPLY} = [Yy] ]]; then
                 echo ${USER_REPLY}
-                break;
+                break
             fi
         done
 
@@ -86,16 +87,16 @@ download_img eflasher
 
 # Automatically re-run script under sudo if not root
 if [ $(id -u) -ne 0 ]; then
-	echo "Re-running script under sudo..."
-	sudo --preserve-env "$0" "$@"
-	exit
+    echo "Re-running script under sudo..."
+    sudo --preserve-env "$0" "$@"
+    exit
 fi
 
 true ${RAW_SIZE_MB:=0}
-RAW_SIZE_MB=${RAW_SIZE_MB} ./mk-sd-image.sh eflasher && \
-	./tools/fill_img_to_eflasher out/${SOC}-eflasher-$(date +%Y%m%d).img ${SOC} $@ && {
-		rm -f out/${SOC}-eflasher-$(date +%Y%m%d).img
-		mkdir -p out/images-for-eflasher
-		tar czf out/images-for-eflasher/${TARGET_OS}-images.tgz ${TARGET_OS}
-		echo "all done."
+RAW_SIZE_MB=${RAW_SIZE_MB} ./mk-sd-image.sh eflasher &&
+    ./tools/fill_img_to_eflasher out/${SOC}-eflasher-$(date +%Y%m%d).img ${SOC} $@ && {
+    rm -f out/${SOC}-eflasher-$(date +%Y%m%d).img
+    mkdir -p out/images-for-eflasher
+    tar czf out/images-for-eflasher/${TARGET_OS}-images.tgz ${TARGET_OS}
+    echo "all done."
 }

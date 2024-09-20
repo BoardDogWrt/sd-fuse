@@ -39,6 +39,10 @@ friendlywrt23)
         RAW_FILE=${SOC}-eflasher-friendlywrt-23.05-$(date +%Y%m%d).img ;;
 friendlywrt23-docker)
         RAW_FILE=${SOC}-eflasher-friendlywrt-23.05-docker-$(date +%Y%m%d).img ;;
+boarddogwrt23)
+        RAW_FILE=${SOC}-eflasher-boarddogwrt-23.05-$(date +%Y%m%d).img ;;
+boarddogwrt23-docker)
+        RAW_FILE=${SOC}-eflasher-boarddogwrt-23.05-docker-$(date +%Y%m%d).img ;;
 friendlywrt22)
         RAW_FILE=${SOC}-eflasher-friendlywrt-22.03-$(date +%Y%m%d).img ;;
 friendlywrt22-docker)

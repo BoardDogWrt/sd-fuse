@@ -18,7 +18,6 @@ set -eu
 # along with this program; if not, you can access it online at
 # http://www.gnu.org/licenses/gpl-2.0.html.
 
-
 true ${SOC:=rk3568}
 true ${DISABLE_MKIMG:=0}
 true ${DISABLE_BUILDKERNEL:=0}
@@ -28,10 +27,12 @@ true ${MK_HEADERS_DEB:=0}
 true ${SKIP_DISTCLEAN:=0}
 true ${BUILD_THIRD_PARTY_DRIVER:=1}
 true ${KCFG:=nanopi5_linux_defconfig}
-true ${TARGET_OS:=$(echo ${1,,}|sed 's/\///g')}
+true ${TARGET_OS:=$(echo ${1,,} | sed 's/\///g')}
+true ${KERNEL_JOB:=4}
+KERNEL_JOB=$KERNEL_JOBS
 
-KERNEL_REPO=https://github.com/friendlyarm/kernel-rockchip
-KERNEL_BRANCH=nanopi6-v6.1.y
+KERNEL_REPO=https://github.com/BoardDogWrt/kernel-rockchip.git
+KERNEL_BRANCH=nanopi6-v6.1.y-boarddogwrt
 ARCH=arm64
 KALL=nanopi5-images
 BACKPORT=
@@ -51,23 +52,23 @@ declare -a KERNEL_3RD_DRIVERS=()
 declare -a KERNEL_3RD_DRIVER_BRANCHES=()
 declare -a KERNEL_3RD_DRIVER_NAME=()
 
-KERNEL_3RD_DRIVERS+=("https://github.com/friendlyarm/rtl8821CU")
+KERNEL_3RD_DRIVERS+=("https://github.com/BoardDogWrt/rtl8821CU.git")
 KERNEL_3RD_DRIVER_BRANCHES+=("nanopi-r2")
 KERNEL_3RD_DRIVER_NAME+=("rtl8821CU")
 
-KERNEL_3RD_DRIVERS+=("https://github.com/friendlyarm/rtl8822bu")
+KERNEL_3RD_DRIVERS+=("https://github.com/BoardDogWrt/rtl8822bu.git")
 KERNEL_3RD_DRIVER_BRANCHES+=("nanopi-r2")
 KERNEL_3RD_DRIVER_NAME+=("rtl8822bu")
 
-KERNEL_3RD_DRIVERS+=("https://github.com/friendlyarm/rtl8822cs")
+KERNEL_3RD_DRIVERS+=("https://github.com/BoardDogWrt/rtl8822cs.git")
 KERNEL_3RD_DRIVER_BRANCHES+=("nanopi-r2")
 KERNEL_3RD_DRIVER_NAME+=("rtl8822cs")
 
-KERNEL_3RD_DRIVERS+=("https://github.com/friendlyarm/rtl8822ce")
+KERNEL_3RD_DRIVERS+=("https://github.com/BoardDogWrt/rtl8822ce.git")
 KERNEL_3RD_DRIVER_BRANCHES+=("nanopi-r2")
 KERNEL_3RD_DRIVER_NAME+=("rtl8822ce")
 
-KERNEL_3RD_DRIVERS+=("https://github.com/friendlyarm/rtl8812au")
+KERNEL_3RD_DRIVERS+=("https://github.com/BoardDogWrt/rtl8812au.git")
 KERNEL_3RD_DRIVER_BRANCHES+=("nanopi-r2")
 KERNEL_3RD_DRIVER_NAME+=("rtl8812au")
 
@@ -85,7 +86,7 @@ build_external_module() {
             })
         fi
         (cd ${DRIVER_NAME} && {
-            make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${BACKPORT} KSRC=${KERNEL_SRC} CONFIG_VENDOR_FRIENDLYARM=y CONFIG_WERROR=n -j$(nproc)
+            make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${BACKPORT} KSRC=${KERNEL_SRC} CONFIG_VENDOR_FRIENDLYARM=y CONFIG_WERROR=n -j$KERNEL_JOB
             if [ $? -ne 0 ]; then
                 echo "failed to build 3rd kernel modules: ${DRIVER_NAME}"
                 exit 1
@@ -96,10 +97,10 @@ build_external_module() {
     })
 }
 
-# 
+#
 # kernel logo:
-# 
-# convert logo.jpg -type truecolor /tmp/logo.bmp 
+#
+# convert logo.jpg -type truecolor /tmp/logo.bmp
 # convert logo.jpg -type truecolor /tmp/logo_kernel.bmp
 # LOGO=/tmp/logo.bmp
 # KERNEL_LOGO=/tmp/logo_kernel.bmp
@@ -108,8 +109,8 @@ build_external_module() {
 TOPPATH=$PWD
 OUT=$TOPPATH/out
 if [ ! -d $OUT ]; then
-	echo "path not found: $OUT"
-	exit 1
+    echo "path not found: $OUT"
+    exit 1
 fi
 KMODULES_OUTDIR="${OUT}/output_${SOC}_kmodules"
 true ${kernel_src:=out/kernel-${SOC}}
@@ -118,21 +119,21 @@ true ${KERNEL_SRC:=${kernel_src}}
 KERNEL_SRC=$(readlink -f ${KERNEL_SRC})
 
 function usage() {
-       echo "Usage: $0 <img dir>"
-       echo "# example:"
-       echo "# clone kernel source from github:"
-       echo "    git clone ${KERNEL_REPO} --depth 1 -b ${KERNEL_BRANCH} ${kernel_src}"
-       echo "# custom kernel logo:"
-       echo "    convert files/logo.jpg -type truecolor /tmp/logo.bmp"
-       echo "    convert files/logo.jpg -type truecolor /tmp/logo_kernel.bmp"
-       echo "    LOGO=/tmp/logo.bmp KERNEL_LOGO=/tmp/logo_kernel.bmp ./build-kernel.sh eflasher"
-       echo "    LOGO=/tmp/logo.bmp KERNEL_LOGO=/tmp/logo_kernel.bmp ./build-kernel.sh debian-buster-desktop-arm64"
-       echo "    ./mk-emmc-image.sh debian-buster-desktop-arm64"
-       echo "# specify the local source:"
-       echo "    KERNEL_SRC=/path/to/kernel ./build-kernel.sh debian-buster-desktop-arm64"
-       echo "# build kernel-headers, enable/disable 3rd drivers:"
-       echo "    MK_HEADERS_DEB=1 BUILD_THIRD_PARTY_DRIVER=0 ./build-kernel.sh debian-buster-desktop-arm64"
-       exit 0
+    echo "Usage: $0 <img dir>"
+    echo "# example:"
+    echo "# clone kernel source from github:"
+    echo "    git clone ${KERNEL_REPO} --depth 1 -b ${KERNEL_BRANCH} ${kernel_src}"
+    echo "# custom kernel logo:"
+    echo "    convert files/logo.jpg -type truecolor /tmp/logo.bmp"
+    echo "    convert files/logo.jpg -type truecolor /tmp/logo_kernel.bmp"
+    echo "    LOGO=/tmp/logo.bmp KERNEL_LOGO=/tmp/logo_kernel.bmp ./build-kernel.sh eflasher"
+    echo "    LOGO=/tmp/logo.bmp KERNEL_LOGO=/tmp/logo_kernel.bmp ./build-kernel.sh debian-buster-desktop-arm64"
+    echo "    ./mk-emmc-image.sh debian-buster-desktop-arm64"
+    echo "# specify the local source:"
+    echo "    KERNEL_SRC=/path/to/kernel ./build-kernel.sh debian-buster-desktop-arm64"
+    echo "# build kernel-headers, enable/disable 3rd drivers:"
+    echo "    MK_HEADERS_DEB=1 BUILD_THIRD_PARTY_DRIVER=0 ./build-kernel.sh debian-buster-desktop-arm64"
+    exit 0
 }
 
 if [ $# -ne 1 ]; then
@@ -146,65 +147,64 @@ if [ $? -ne 0 ]; then
 fi
 check_and_install_package
 
-
 case ${TARGET_OS} in
-buildroot* | friendlycore-* | openmediavault-* | debian-* | ubuntu-* | friendlywrt* | eflasher )
-        ;;
+buildroot* | friendlycore-* | openmediavault-* | debian-* | ubuntu-* | friendlywrt* | eflasher | boarddogwrt*) ;;
 *)
-        echo "Error: Unsupported target OS: ${TARGET_OS}"
-        exit 1
+    echo "Error: Unsupported target OS: ${TARGET_OS}"
+    exit 1
+    ;;
 esac
 
-download_img() {
-    local RKPARAM=$(dirname $0)/${1}/parameter.txt
-    if [ -f "${RKPARAM}" ]; then
-	    echo "${1} found."
-    else
-	ROMFILE=`./tools/get_pkg_filename.sh ${1}`
-        cat << EOF
-Warn: Image not found for ${1}
-----------------
-you may download it from the netdisk (dl.friendlyarm.com) to get a higher downloading speed,
-the image files are stored in a directory called "03_Partition image files", for example:
-    tar xvzf /path/to/NetDrive/03_Partition\ image\ files/${ROMFILE}
-----------------
-Do you want to download it now via http? (Y/N):
-EOF
-        while read -r -n 1 -t 3600 -s USER_REPLY; do
-            if [[ ${USER_REPLY} = [Nn] ]]; then
-                echo ${USER_REPLY}
-                exit 1
-            elif [[ ${USER_REPLY} = [Yy] ]]; then
-                echo ${USER_REPLY}
-                break;
-            fi
-        done
+# download_img() {
+#     local RKPARAM=$(dirname $0)/${1}/parameter.txt
+#     if [ -f "${RKPARAM}" ]; then
+# 	    echo "${1} found."
+#     else
+# 	ROMFILE=`./tools/get_pkg_filename.sh ${1}`
+#         cat << EOF
+# Warn: Image not found for ${1}
+# ----------------
+# you may download it from the netdisk (dl.friendlyarm.com) to get a higher downloading speed,
+# the image files are stored in a directory called "03_Partition image files", for example:
+#     tar xvzf /path/to/NetDrive/03_Partition\ image\ files/${ROMFILE}
+# ----------------
+# Do you want to download it now via http? (Y/N):
+# EOF
+#         while read -r -n 1 -t 3600 -s USER_REPLY; do
+#             if [[ ${USER_REPLY} = [Nn] ]]; then
+#                 echo ${USER_REPLY}
+#                 exit 1
+#             elif [[ ${USER_REPLY} = [Yy] ]]; then
+#                 echo ${USER_REPLY}
+#                 break;
+#             fi
+#         done
 
-        if [ -z ${USER_REPLY} ]; then
-            echo "Cancelled."
-            exit 1
-        fi
-        ./tools/get_rom.sh ${1} || exit 1
-    fi
-}
+#         if [ -z ${USER_REPLY} ]; then
+#             echo "Cancelled."
+#             exit 1
+#         fi
+#         ./tools/get_rom.sh ${1} || exit 1
+#     fi
+# }
 
 if [ ! -d ${KERNEL_SRC} ]; then
-	git clone ${KERNEL_REPO} --depth 1 -b ${KERNEL_BRANCH} ${KERNEL_SRC}
+    git clone ${KERNEL_REPO} --depth 1 -b ${KERNEL_BRANCH} ${KERNEL_SRC}
 fi
 
 echo "kernel src: ${KERNEL_SRC}"
 if [ -f "${LOGO}" ]; then
-	cp -f ${LOGO} ${KERNEL_SRC}/logo.bmp
-	echo "using ${LOGO} as logo."
+    cp -f ${LOGO} ${KERNEL_SRC}/logo.bmp
+    echo "using ${LOGO} as logo."
 else
-	echo "using official logo."
+    echo "using official logo."
 fi
 
 if [ -f "${KERNEL_LOGO}" ]; then
-        cp -f ${KERNEL_LOGO} ${KERNEL_SRC}/logo_kernel.bmp
-        echo "using ${KERNEL_LOGO} as kernel logo."
+    cp -f ${KERNEL_LOGO} ${KERNEL_SRC}/logo_kernel.bmp
+    echo "using ${KERNEL_LOGO} as kernel logo."
 else
-        echo "using official kernel logo."
+    echo "using official kernel logo."
 fi
 
 function build_kernel() {
@@ -224,29 +224,29 @@ function build_kernel() {
         sed -i "s/\(.*PROT_MT_SLOT\).*/# \1 is not set/g" .config
     fi
 
-    make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${KALL} -j$(nproc)
+    make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${KALL} -j$KERNEL_JOB
     if [ $? -ne 0 ]; then
-            echo "failed to build kernel."
-            exit 1
+        echo "failed to build kernel."
+        exit 1
     fi
 
     rm -rf ${KMODULES_OUTDIR}
     mkdir -p ${KMODULES_OUTDIR}
-    make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} INSTALL_MOD_PATH=${KMODULES_OUTDIR} modules -j$(nproc)
+    make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} INSTALL_MOD_PATH=${KMODULES_OUTDIR} modules -j$KERNEL_JOB
     if [ $? -ne 0 ]; then
         echo "failed to build kernel modules."
-            exit 1
+        exit 1
     fi
     make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} INSTALL_MOD_PATH=${KMODULES_OUTDIR} modules_install INSTALL_MOD_STRIP=1
     if [ $? -ne 0 ]; then
         echo "failed to build kernel modules."
-            exit 1
+        exit 1
     fi
-    KERNEL_VER=`make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} kernelrelease`
+    KERNEL_VER=$(make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} kernelrelease)
 
     # build r8125 driver
     export ETHTOOL_LEGACY_2500baseX=y
-    build_external_module "https://github.com/friendlyarm/r8125" "main" "r8125"
+    build_external_module "https://github.com/BoardDogWrt/r8125.git" "main" "r8125"
     unset ETHTOOL_LEGACY_2500baseX
 
     # build cryptodev-linux
@@ -263,7 +263,7 @@ function build_kernel() {
     # build nft-fullcone
     (cd ${OUT} && {
         if [ ! -d nft-fullcone ]; then
-            git clone https://github.com/friendlyarm/nft-fullcone -b master nft-fullcone
+            git clone https://github.com/BoardDogWrt/nft-fullcone.git -b master nft-fullcone
         fi
         (cd nft-fullcone/src/ && {
             make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} -C ${KERNEL_SRC} M=$(pwd)
@@ -274,7 +274,7 @@ function build_kernel() {
     # build rtw_8822ce wifi driver
     (cd ${OUT} && {
         if [ ! -d rtw88 ]; then
-            git clone https://github.com/friendlyarm/rtw88 -b master --depth 1 rtw88
+            git clone https://github.com/BoardDogWrt/rtw88.git -b master --depth 1 rtw88
         fi
         (cd rtw88/ && {
             make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${BACKPORT} -C ${KERNEL_SRC} M=$(pwd)
@@ -288,8 +288,7 @@ function build_kernel() {
 
     # build usb wifi driver
     if [ ${BUILD_THIRD_PARTY_DRIVER} -eq 1 ]; then
-        for (( i=0; i<${#KERNEL_3RD_DRIVERS[@]}; i++ ));
-        do
+        for ((i = 0; i < ${#KERNEL_3RD_DRIVERS[@]}; i++)); do
             build_external_module ${KERNEL_3RD_DRIVERS[$i]} ${KERNEL_3RD_DRIVER_BRANCHES[$i]} ${KERNEL_3RD_DRIVER_NAME[$i]}
         done
     fi
@@ -301,7 +300,7 @@ function build_kernel() {
 
     (cd ${KMODULES_OUTDIR}/lib/modules/${KERNEL_VER}/ && {
         rm -rf ./build ./source
-    	echo "depmod ${KMODULES_OUTDIR} ${KERNEL_VER} ..."
+        echo "depmod ${KMODULES_OUTDIR} ${KERNEL_VER} ..."
         depmod -a -b ${KMODULES_OUTDIR} ${KERNEL_VER}
     })
 
@@ -330,7 +329,7 @@ function build_kernel() {
                 exit 1
             fi
 
-            find . -type f ! -path './DEBIAN/*' -printf '%P\0' | xargs -r0 md5sum > DEBIAN/md5sums
+            find . -type f ! -path './DEBIAN/*' -printf '%P\0' | xargs -r0 md5sum >DEBIAN/md5sums
         })
         dpkg-deb -Zgzip -b ${KERNEL_SRC}/debian/linux-headers ${KERNEL_HEADERS_DEB}
         if [ $? -ne 0 ]; then
@@ -357,20 +356,20 @@ if [ $DISABLE_MKIMG -eq 1 ]; then
     exit 0
 fi
 
-cd ${TOPPATH}
-download_img ${TARGET_OS}
-./tools/update_kernel_bin_to_img.sh ${OUT} ${KERNEL_SRC} ${TARGET_OS} ${TOPPATH}/prebuilt
+# cd ${TOPPATH}
+# download_img ${TARGET_OS}
+# ./tools/update_kernel_bin_to_img.sh ${OUT} ${KERNEL_SRC} ${TARGET_OS} ${TOPPATH}/prebuilt
 
-if [ $? -eq 0 ]; then
-    echo "updating kernel ok."
-else
-    echo "failed."
-    exit 1
-fi
+# if [ $? -eq 0 ]; then
+#     echo "updating kernel ok."
+# else
+#     echo "failed."
+#     exit 1
+# fi
 
-if [ ${MK_HEADERS_DEB} -eq 1 ]; then
-    echo "-----------------------------------------"
-    echo "the kernel header package has been generated:"
-    echo "    ${KERNEL_HEADERS_DEB}"
-    echo "-----------------------------------------"
-fi
+# if [ ${MK_HEADERS_DEB} -eq 1 ]; then
+#     echo "-----------------------------------------"
+#     echo "the kernel header package has been generated:"
+#     echo "    ${KERNEL_HEADERS_DEB}"
+#     echo "-----------------------------------------"
+# fi

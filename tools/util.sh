@@ -34,12 +34,12 @@ function check_and_install_package() {
 		if [ -f /etc/os-release ]; then
 			. /etc/os-release
 			case "$VERSION_CODENAME" in
-			noble|jammy|bookworm|bullseye)
-					PACKAGES="exfatprogs ${PACKAGES}"
-					;;
+			noble | jammy | bookworm | bullseye)
+				PACKAGES="exfatprogs ${PACKAGES}"
+				;;
 			*)
-					PACKAGES="exfat-fuse exfat-utils ${PACKAGES}"
-					;;
+				PACKAGES="exfat-fuse exfat-utils ${PACKAGES}"
+				;;
 			esac
 		fi
 
@@ -48,13 +48,13 @@ function check_and_install_package() {
 		if [ -f /etc/os-release ]; then
 			. /etc/os-release
 			case "$VERSION_CODENAME" in
-			focal|jammy|noble|bookworm|bullseye)
-					PACKAGES="android-sdk-libsparse-utils ${PACKAGES}"
-					# PACKAGES="android-sdk-ext4-utils ${PACKAGES}"
-					;;
+			focal | jammy | noble | bookworm | bullseye)
+				PACKAGES="android-sdk-libsparse-utils ${PACKAGES}"
+				# PACKAGES="android-sdk-ext4-utils ${PACKAGES}"
+				;;
 			*)
-					PACKAGES="android-tools-fsutils ${PACKAGES}"
-					;;
+				PACKAGES="android-tools-fsutils ${PACKAGES}"
+				;;
 			esac
 		fi
 	fi
@@ -89,27 +89,28 @@ function check_and_install_package() {
 
 function check_and_install_toolchain() {
 	local PACKAGES=
-	local requirements=("build-essential" "make" "device-tree-compiler" "bc" "cpio" "lz4" \
+	local requirements=("build-essential" "make" "device-tree-compiler" "bc" "cpio" "lz4"
 		"flex" "bison" "libncurses-dev" "libssl-dev" "libelf-dev")
 	for pkg in ${requirements[@]}; do
-		if ! dpkg -s $pkg > /dev/null 2>&1; then
+		if ! dpkg -s $pkg >/dev/null 2>&1; then
 			PACKAGES="$pkg ${PACKAGES}"
 		fi
 	done
 	if [ ! -z "${PACKAGES}" ]; then
 		sudo apt install ${PACKAGES}
 	fi
-
+	local file_path=$(realpath $0)
+	local tools_path=$(dirname $file_path)
+	local project_root_path=$(realpath $tools_path/../..)
+	local prebuilts_gcc_aarch64_path="${project_root_path}/prebuilts/gcc/linux-x86/aarch64/gcc-arm-11.3-x86_64-aarch64-none-linux-gnu"
 	case "$(uname -mpi)" in
 	x86_64*)
-		if [ ! -d /opt/FriendlyARM/toolchain/11.3-aarch64 ]; then
-			echo "please install aarch64-gcc-11.3 first, using following commands: "
-			echo "    git clone https://github.com/friendlyarm/prebuilts.git -b master --depth 1"
-			echo "    cd prebuilts/gcc-x64"
-			echo "    sudo tar xvf toolchain-11.3-aarch64.tar.xz -C /"
+		if [ ! -d $prebuilts_gcc_aarch64_path ]; then
+			echo "please install aarch64-gcc-11.3 first."
 			exit 1
 		fi
-		export PATH=/opt/FriendlyARM/toolchain/11.3-aarch64/bin/:$PATH
+		export PATH=$prebuilts_gcc_aarch64_path/bin/:$PATH
+		echo "tools: command 'export PATH=$prebuilts_gcc_aarch64_path/bin/:\$PATH'"
 		return 0
 		;;
 	aarch64*)

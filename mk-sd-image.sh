@@ -56,6 +56,8 @@ if [ $RAW_SIZE_MB -eq 0 ]; then
 		RAW_SIZE_MB=7800 ;;
 	friendlywrt*)
 		RAW_SIZE_MB=1500 ;;
+	boarddogwrt*)
+		RAW_SIZE_MB=1500 ;;
 	eflasher)
 		RAW_SIZE_MB=7800 ;;
 	*)
@@ -75,6 +77,12 @@ else
 		;;
 	friendlywrt23-docker)
 		RAW_FILE=${SOC}-sd-friendlywrt-23.05-docker-arm64-$(date +%Y%m%d).img
+		;;
+	boarddogwrt23)
+		RAW_FILE=${SOC}-sd-boarddogwrt-23.05-arm64-$(date +%Y%m%d).img
+		;;
+	boarddogwrt23-docker)
+		RAW_FILE=${SOC}-sd-boarddogwrt-23.05-docker-arm64-$(date +%Y%m%d).img
 		;;
 	friendlywrt22)
 		RAW_FILE=${SOC}-sd-friendlywrt-22.03-arm64-$(date +%Y%m%d).img

@@ -12,6 +12,10 @@ friendlywrt23)
         ROMFILE=friendlywrt23-images.tgz;;
 friendlywrt23-docker)
         ROMFILE=friendlywrt23-docker-images.tgz;;
+boarddogwrt23)
+        ROMFILE=boarddogwrt23-images.tgz;;
+boarddogwrt23-docker)
+        ROMFILE=boarddogwrt23-docker-images.tgz;;
 friendlywrt22)
         ROMFILE=friendlywrt22-images.tgz;;
 friendlywrt22-docker)

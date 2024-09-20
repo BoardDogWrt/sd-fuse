@@ -93,7 +93,7 @@ make_ext4_img() {
     local MKFS_OPTS="-E android_sparse -t ext4 -L rootfs -M /root -b 4096"
 
     case ${TARGET_OS} in
-    friendlywrt* | buildroot*)
+    boarddogwrt* | friendlywrt* | buildroot*)
         # set default uid/gid to 0
         MKFS_OPTS="-0 ${MKFS_OPTS}"
         ;;
